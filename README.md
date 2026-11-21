@@ -20,6 +20,7 @@ scripts/assemble_result.py    按 output_contract 装配 result.json
 scripts/audit.py              生成 audit.md 自审清单
 scripts/dimension_check.py    量纲引擎：带入符号单位求值，核对结果量纲
 scripts/latex_compare.py      结构规范化比较与数值等价抽样
+scripts/link_refs.py          正文编号引用连到带 label 的公式
 templates/                    变量表与报告模板
 examples/case/                合成示例（含 case.json、values.json、答案与公式 XML）
 examples/case_missing/        缺公式表示的示例，演示 insufficient_evidence 分支
@@ -91,10 +92,12 @@ python install.py --target /app/submission
 
 ## 版本
 
+- 1.5.0：符号段落级定位（first_body_location）与公式交叉引用（link_refs）；正文段落带 [pID] 标记。
 - 1.4.0：结构还原基准 8/8；支持不可见算符（U+2061/U+2062）、alttext 优先、JATS label 公式编号、命令与字母间距；新增 latex_compare 等价比较。
 - 1.3.0：新增量纲核对 dimension_check.py（支持派生单位与括号），示例与自检覆盖单位错误检出。
 - 1.2.0：新增 10 条自建基准与 `install.py`；抽取优先采用原文 LaTeX 注释、继承 `disp-formula` 级别 ID、标记截断；数值核验增加数量级区间核对；示例输出显式标注为示例。
 - 1.1.0：新增 audit.py 自审清单、munderover/matrix 覆盖、缺失材料示例；数值核验去除 antlr4 依赖。
+
 
 
 
