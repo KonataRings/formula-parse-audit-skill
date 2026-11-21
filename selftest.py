@@ -96,7 +96,9 @@ def main():
     assert ids["FD2"]["latex"].replace(" ", "") == "E=mc^{2}", ids["FD2"]["latex"]
     assert ids["FD1"]["container"] == "disp-formula", ids["FD1"]
     assert ids["FD1"]["label"] == "(3)", ids["FD1"]
-    assert ids["FD3"]["method"] == "source_annotation", ids["FD3"]
+    assert ids["FD3"]["method"] == "source_alttext", ids["FD3"]
+    assert ids["FD4"]["method"] == "source_texmath", ids["FD4"]
+    assert ids["FD4"]["latex"] == "h_{x}=h-V_\\xi", ids["FD4"]["latex"]
     assert "\u2062" not in ids["FD3"]["latex"], ids["FD3"]["latex"]
     assert not any("\u2061" in (p["latex"] or "") or "\u2062" in (p["latex"] or "") for p in pub), \
         "invisible operators must not reach LaTeX"
