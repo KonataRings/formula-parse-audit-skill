@@ -96,12 +96,14 @@ python install.py --target /app/submission
 
 ## 版本
 
+- 1.7.0：自检覆盖失效场景（畸形 XML 不崩溃、语义不等价判定、未知单位报错）。
 - 1.6.0：run_case 一条命令收敛全流程并输出 summary.json；新增 docs/quickstart.md。
 - 1.5.0：符号段落级定位（first_body_location）与公式交叉引用（link_refs）；正文段落带 [pID] 标记。
 - 1.4.0：结构还原基准 8/8；支持不可见算符（U+2061/U+2062）、alttext 优先、JATS label 公式编号、命令与字母间距；新增 latex_compare 等价比较。
 - 1.3.0：新增量纲核对 dimension_check.py（支持派生单位与括号），示例与自检覆盖单位错误检出。
 - 1.2.0：新增 10 条自建基准与 `install.py`；抽取优先采用原文 LaTeX 注释、继承 `disp-formula` 级别 ID、标记截断；数值核验增加数量级区间核对；示例输出显式标注为示例。
 - 1.1.0：新增 audit.py 自审清单、munderover/matrix 覆盖、缺失材料示例；数值核验去除 antlr4 依赖。
+
 
 
 
