@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Synthetic stand-in for a publisher XML: carries a disp-formula id and, in the
-     second formula, the publisher's own LaTeX annotation. Used by selftest.py. -->
+<!-- Synthetic stand-in for a publisher XML: carries a disp-formula id, an equation
+     label, an alttext-only formula and invisible operators (U+2062). -->
 <article xmlns:mml="http://www.w3.org/1998/Math/MathML">
   <p id="p1">The oscillator frequency follows from the stiffness and the mass.</p>
   <disp-formula id="FD1">
+    <label>(3)</label>
     <mml:math><mml:mrow>
       <mi>omega</mi><mo>=</mo><msqrt><mfrac><mi>k</mi><mi>m</mi></mfrac></msqrt>
     </mml:mrow></mml:math>
@@ -14,5 +15,11 @@
         <mml:msup><mml:mi>c</mml:mi><mml:mn>2</mml:mn></mml:msup></mml:mrow>
       <mml:annotation encoding="application/x-tex">E = m c^{2}</mml:annotation>
     </mml:semantics></mml:math>
+  </disp-formula>
+  <disp-formula id="FD3">
+    <mml:math alttext="2 \pi m k^{2}">
+      <mml:mn>2</mml:mn><mml:mo>&#x2062;</mml:mo><mml:mi>&#x3c0;</mml:mi>
+      <mml:mo>&#x2062;</mml:mo><mml:mi>m</mml:mi><mml:msup><mml:mi>k</mml:mi><mml:mn>2</mml:mn></mml:msup>
+    </mml:math>
   </disp-formula>
 </article>
