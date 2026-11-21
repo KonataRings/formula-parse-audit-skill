@@ -19,6 +19,7 @@ scripts/numeric_check.py      LaTeX -> Python，代算并给出中间值
 scripts/assemble_result.py    按 output_contract 装配 result.json
 scripts/audit.py              生成 audit.md 自审清单
 scripts/dimension_check.py    量纲引擎：带入符号单位求值，核对结果量纲
+scripts/latex_compare.py      结构规范化比较与数值等价抽样
 templates/                    变量表与报告模板
 examples/case/                合成示例（含 case.json、values.json、答案与公式 XML）
 examples/case_missing/        缺公式表示的示例，演示 insufficient_evidence 分支
@@ -48,7 +49,15 @@ python benchmark/run_benchmark.py  # 自建 10 条公式基准，输出通过率
 
 `selftest.py` 覆盖：公式带 id 抽取、分式与希腊字母正确转换、变量表非空、`output_contract` 每个字段都出现在 `result.json`，并对"没有公式表示的材料"单独断言必须降级为 `partial` 而不是编造内容。
 
-`benchmark/` 是本题作品自建的基准，用教科书公式，期望值来自**与 LaTeX 转换独立的 Python 表达式**；两条路径算出同一个数才算通过，因此能发现指数错位、下标合并、括号层级错误。它检验转换保真度，**不是**平台官方的三道隐藏案例，通过率不能当作官方得分。
+`benchmark/` 是本题作品自建的基准，分两部分：10 条教科书公式的**数值核对**（期望值来自与 LaTeX 转换独立的 Python 表达式，两条路径算出同一个数才算通过），以及 8 条 **MathML → LaTeX 结构还原**（含 U+2061/U+2062 不可见算符、函数作用、根号下的分式、上下标并存、分段函数、大写希腊字母、alttext 优先）。它检验转换保真度，**不是**平台官方的三道隐藏案例，通过率不能当作官方得分。
+
+## 比较两个公式是否等价
+
+```bash
+python scripts/latex_compare.py --a "E = m c^{2}" --b "E=mc^2" --symbols c,m,E
+```
+
+先做结构规范化（忽略空格、`\left/\right`、`\dfrac` 与 `\frac` 的差异、单字符多余花括号），再做数值等价抽样：在若干随机取值下两边算出的数一致才算等价。用于判断评审给出的参考写法与自己还原的写法是否"写法不同、含义相同"。
 
 ## 量纲核对
 
@@ -82,8 +91,10 @@ python install.py --target /app/submission
 
 ## 版本
 
+- 1.4.0：结构还原基准 8/8；支持不可见算符（U+2061/U+2062）、alttext 优先、JATS label 公式编号、命令与字母间距；新增 latex_compare 等价比较。
 - 1.3.0：新增量纲核对 dimension_check.py（支持派生单位与括号），示例与自检覆盖单位错误检出。
 - 1.2.0：新增 10 条自建基准与 `install.py`；抽取优先采用原文 LaTeX 注释、继承 `disp-formula` 级别 ID、标记截断；数值核验增加数量级区间核对；示例输出显式标注为示例。
 - 1.1.0：新增 audit.py 自审清单、munderover/matrix 覆盖、缺失材料示例；数值核验去除 antlr4 依赖。
+
 
 
