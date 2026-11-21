@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 """Run the self-built benchmark: LaTeX conversion vs an independent expression.
 
     python run_benchmark.py [--cases cases.jsonl] [--output report.md]
@@ -27,15 +27,45 @@ def load(name):
     return mod
 
 
+def run_mathml(fe, lc, cases_path, workdir, rel_tol=1e-6):
+    """Reconstruction fidelity: MathML in, expected LaTeX out."""
+    if not os.path.exists(cases_path):
+        return [], 0, 0
+    os.makedirs(workdir, exist_ok=True)
+    rows, passed, total = [], 0, 0
+    for line in open(cases_path, encoding="utf-8-sig"):
+        if not line.strip():
+            continue
+        case = json.loads(line)
+        path = os.path.join(workdir, case["id"] + ".xml")
+        open(path, "w", encoding="utf-8").write(case["mathml"])
+        got = fe.scan_file(path)
+        latex = got[0]["latex"] if got else ""
+        ok = bool(got) and lc.structural_equal(latex, case["expected_latex"])
+        total += 1
+        passed += ok
+        rows.append({"id": case["id"], "ok": ok, "got": latex,
+                     "want": case["expected_latex"],
+                     "method": got[0].get("method") if got else None,
+                     "truncated": got[0].get("truncated") if got else None,
+                     "note": case.get("note", "")})
+    return rows, passed, total
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--cases", default=os.path.join(HERE, "cases.jsonl"))
+    ap.add_argument("--mathml-cases", default=os.path.join(HERE, "mathml_cases.jsonl"))
     ap.add_argument("--output", default=os.path.join(HERE, "report.md"))
     ap.add_argument("--rel-tol", type=float, default=1e-6)
     a = ap.parse_args()
 
     nc = load("numeric_check")
     st = load("symbol_table")
+    fe = load("formula_extract")
+    lc = load("latex_compare")
+    mathml_rows, mathml_passed, mathml_total = run_mathml(
+        fe, lc, a.mathml_cases, os.path.join(HERE, "_tmp_mathml"), a.rel_tol)
 
     rows, passed = [], 0
     for line in open(a.cases, encoding="utf-8-sig"):
@@ -85,12 +115,30 @@ def main():
         lines.append("| %s | `%s` |" % (r["id"], r["expr"]))
     lines.append("")
 
+    if mathml_total:
+        lines += ["## 结构还原（MathML → LaTeX）", "",
+                  "| 案例 | 一致 | 取得方式 | LaTeX | 期望 | 说明 |",
+                  "|-|-|-|-|-|-|"]
+        for r in mathml_rows:
+            lines.append("| %s | %s | %s | `%s` | `%s` | %s |" % (
+                r["id"], "✓" if r["ok"] else "✗", r["method"] or "-",
+                r["got"], r["want"], r["note"]))
+        lines += ["", "结构还原通过 **%d/%d**（比较前统一空格、括号与 `\\dfrac`/`\\frac` 差异）。"
+                  % (mathml_passed, mathml_total), ""]
+
+    lines += ["## 汇总", "", "- 数值核对：**%d/%d**" % (passed, total),
+              "- 结构还原：**%d/%d**" % (mathml_passed, mathml_total), ""]
+
     open(a.output, "w", encoding="utf-8").write("\n".join(lines))
-    json.dump({"passed": passed, "total": total, "rows": rows},
+    json.dump({"passed": passed, "total": total, "rows": rows,
+               "mathml_passed": mathml_passed, "mathml_total": mathml_total,
+               "mathml_rows": mathml_rows},
               open(os.path.join(HERE, "report.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
-    print(json.dumps({"passed": passed, "total": total, "output": a.output}, ensure_ascii=False))
-    return 0 if passed == total else 1
+    print(json.dumps({"passed": passed, "total": total,
+                      "mathml_passed": mathml_passed, "mathml_total": mathml_total,
+                      "output": a.output}, ensure_ascii=False))
+    return 0 if (passed == total and mathml_passed == mathml_total) else 1
 
 
 if __name__ == "__main__":
