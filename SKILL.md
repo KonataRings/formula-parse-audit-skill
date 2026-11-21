@@ -37,8 +37,8 @@ description: 解析科研材料中的公式（MathML、出版商 XML、PDF 片�
    - **不可见算符**：U+2061（函数作用）与 U+2062（隐式乘）必须丢弃，不能写进 LaTeX，否则 `sin(x)` 会变成非法命令。
    - **命令与字母相邻**：`\pi` 紧接 `m` 时插入空格，避免被读成 `\pim`。
    - **公式编号**：JATS 把编号放在 `disp-formula` 的 `<label>` 里，脚本沿祖先查找并写入 `label` 字段。
-3. **建立变量表。** 用 `scripts/symbol_table.py` 从 LaTeX 提取符号，合并正文中的定义句，输出 `work/symbols.csv`。每一行必须能回答：符号是什么、含义、单位、取值范围、首次定义出现在哪个 `id` 或页码。原文没有给出的字段写 `not_reported`，不按常识补写。
-4. **拆解推导。** 只对材料中真实出现的推导写步骤；每步记录所用前序步骤的 `id`、假设、近似和边界条件。跨公式引用要指名 `id`。材料只给结论而未给推导时，写 `derivation_not_provided`，不要自行生成"看起来合理"的中间步骤。
+3. **建立变量表。** 用 `scripts/symbol_table.py` 从 LaTeX 提取符号，合并正文中的定义句，输出 `work/symbols.csv`。每一行必须能回答：符号是什么、含义、单位、取值范围、首次定义出现在哪个 `id` 或页码。原文没有给出的字段写 `not_reported`，不按常识补写。正文按段落打 `[pID]` 标记，脚本会把符号第一次出现的段号写进 `first_body_location`。
+4. **拆解推导。** 只对材料中真实出现的推导写步骤；每步记录所用前序步骤的 `id`、假设、近似和边界条件。跨公式引用要指名 `id`。材料只给结论而未给推导时，写 `derivation_not_provided`，不要自行生成"看起来合理"的中间步骤。正文里 "Eq. (3)" 这类编号引用由 `scripts/link_refs.py` 自动连到带 `<label>` 的公式，输出 `work/refs.json`；连不上的引用进 `unresolved`，不猜。
 5. **数值核验。** 用 `scripts/numeric_check.py` 对可计算公式做代算：解析 LaTeX、代入材料给出的数值、输出中间值与最终值。无法解析或缺少数值时，报告失败原因与本应满足的条件，不用 0 占位。
    若材料还声明了符号单位，用 `scripts/dimension_check.py` 做量纲核对：同一表达式换上单位求值，结果量纲与原文声明不一致即报 `partial`，可发现"数值看似合理但单位错"的情形。
 6. **落盘。** 用 `scripts/assemble_result.py` 生成 `/app/output/result.json`：包含 `output_contract` 的全部字段、`case_id`、来源定位、运行状态、不确定项和变更记录。可编辑产物放 `/app/output`，需要预览的另存 PDF 或 PNG。
@@ -115,6 +115,7 @@ C02 这类"保留真实缺失分支"的案例，正确做法是报告缺什么�
 - `scripts/audit.py`：生成 `audit.md` 自审清单。
 - `scripts/dimension_check.py`：量纲引擎，符号单位带入同一表达式求值，核对结果量纲。
 - `scripts/latex_compare.py`：两个 LaTeX 的结构规范化比较与数值等价抽样，用于判断"写法不同、含义相同"。
+- `scripts/link_refs.py`：把正文中的编号引用连到带 `<label>` 的公式，产出依赖边。
 - `install.py`：把 Skill 幂等复制到 `/app/submission`，兼容两种目录约定。
 - `benchmark/`：自建 10 条公式基准，期望值来自与 LaTeX 转换独立的表达式；`run_benchmark.py` 输出通过率与逐条表达式。它检验的是转换保真度，不是官方分数。
 - `templates/`：变量表与报告模板。
