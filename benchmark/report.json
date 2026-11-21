@@ -1,0 +1,126 @@
+{
+ "passed": 10,
+ "total": 10,
+ "rows": [
+  {
+   "id": "debye-lowT-heat-capacity",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 3.2277063390481063e-27,
+   "want": 3.2277063390481063e-27,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "((12)/(5))*pi**(4)*N*k_B*(((T)/(Theta)))**(3)",
+   "note": "Debye low-temperature limit; exponent 3 must stay on (T/Theta)"
+  },
+  {
+   "id": "ideal-gas-pressure",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 103930.78272500001,
+   "want": 103930.78272500001,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "((n*R*T)/(V))",
+   "note": "nested fraction; every symbol appears once"
+  },
+  {
+   "id": "arrhenius-rate",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 19696.844050928685,
+   "want": 19696.844050928685,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "A*exp(-((E_a)/(R*T)))",
+   "note": "minus sign inside the exponential and a subscripted activation energy"
+  },
+  {
+   "id": "einstein-heat-capacity",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 3.813381231508183e-23,
+   "want": 3.813381231508183e-23,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "3*N*k_B*(((Theta)/(T)))**(2)*((exp(Theta/T))/((exp(Theta/T)-1)**(2)))",
+   "note": "powers on a bracketed ratio plus a squared denominator"
+  },
+  {
+   "id": "debye-length",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 1.1952706071189928e-07,
+   "want": 1.1952706071189928e-07,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "sqrt(((epsilon_0*k_B*T)/(n*e**(2))))",
+   "note": "square root of a fraction; charge appears squared"
+  },
+  {
+   "id": "fermi-energy",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 1.1267725818968546e-18,
+   "want": 1.1267725818968546e-18,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "((hbar**(2))/(2*m))*(3*pi**(2)*n)**(2/3)",
+   "note": "fractional exponent 2/3 on a bracketed product"
+  },
+  {
+   "id": "larmor-frequency",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 401283192.0,
+   "want": 401283192.0,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "gamma*B",
+   "note": "implicit product of two symbols; Greek letter must survive"
+  },
+  {
+   "id": "diffusion-length",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 1.0000000000000002e-06,
+   "want": 1.0000000000000002e-06,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "sqrt(D*tau)",
+   "note": "square root of a product; no numeric coefficient"
+  },
+  {
+   "id": "stefan-boltzmann-flux",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 459.300327939,
+   "want": 459.300327939,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "sigma*T**(4)",
+   "note": "single-power term; catches a dropped exponent"
+  },
+  {
+   "id": "thermal-de-broglie",
+   "ok": true,
+   "value_ok": true,
+   "symbols_ok": true,
+   "got": 1.0043034025695798e-10,
+   "want": 1.0043034025695798e-10,
+   "rel": 0.0,
+   "missing_symbols": [],
+   "expr": "((h)/(sqrt(2*pi*m*k_B*T)))",
+   "note": "square root in the denominator; constants under the root"
+  }
+ ]
+}
