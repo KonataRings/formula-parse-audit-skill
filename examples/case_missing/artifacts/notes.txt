@@ -1,0 +1,8 @@
+Snapshot notes (synthetic example of a material with no machine-readable formulas).
+
+The original snapshot reports a measured quantity and its stated conditions, but
+provides no formula representation and no per-point data that would allow the
+reported value to be recomputed. Under the skill's decision table this case must
+be reported as insufficient_evidence for the formula, derivation and numeric
+fields: the missing objects are named, and nothing is back-inferred from other
+literature.
