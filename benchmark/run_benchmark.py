@@ -14,7 +14,9 @@ import importlib.util
 import json
 import math
 import os
+import shutil
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPTS = os.path.join(os.path.dirname(HERE), "scripts")
@@ -64,8 +66,25 @@ def main():
     st = load("symbol_table")
     fe = load("formula_extract")
     lc = load("latex_compare")
-    mathml_rows, mathml_passed, mathml_total = run_mathml(
-        fe, lc, a.mathml_cases, os.path.join(HERE, "_tmp_mathml"), a.rel_tol)
+    def pick_workdir():
+        """A writable scratch dir: system temp if it really works, else next to here."""
+        try:
+            d = tempfile.mkdtemp(prefix="formula_bench_")
+            probe = os.path.join(d, ".probe")
+            open(probe, "w").write("x")
+            os.remove(probe)
+            return d
+        except OSError:
+            d = os.path.join(HERE, "_tmp_mathml")
+            os.makedirs(d, exist_ok=True)
+            return d
+
+    tmp_root = pick_workdir()
+    try:
+        mathml_rows, mathml_passed, mathml_total = run_mathml(
+            fe, lc, a.mathml_cases, tmp_root, a.rel_tol)
+    finally:
+        shutil.rmtree(tmp_root, ignore_errors=True)
 
     rows, passed = [], 0
     for line in open(a.cases, encoding="utf-8-sig"):
@@ -143,4 +162,5 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
 
