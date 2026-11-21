@@ -1,0 +1,13 @@
+{
+ "case_id": "EXAMPLE-000",
+ "note": "synthetic example, not an official case; used only to exercise the pipeline",
+ "output_contract": {
+  "required": ["formulas", "symbol_table", "derivation", "numeric_check"],
+  "properties": {
+   "formulas": {"type": "array"},
+   "symbol_table": {"type": "array"},
+   "derivation": {"type": "array"},
+   "numeric_check": {"type": "object"}
+  }
+ }
+}
