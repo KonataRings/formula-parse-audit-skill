@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic stand-in for a publisher XML: carries a disp-formula id and, in the
+     second formula, the publisher's own LaTeX annotation. Used by selftest.py. -->
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML">
+  <p id="p1">The oscillator frequency follows from the stiffness and the mass.</p>
+  <disp-formula id="FD1">
+    <mml:math><mml:mrow>
+      <mi>omega</mi><mo>=</mo><msqrt><mfrac><mi>k</mi><mi>m</mi></mfrac></msqrt>
+    </mml:mrow></mml:math>
+  </disp-formula>
+  <disp-formula id="FD2">
+    <mml:math><mml:semantics>
+      <mml:mrow><mml:mi>E</mml:mi><mml:mo>=</mml:mo><mml:mi>m</mml:mi>
+        <mml:msup><mml:mi>c</mml:mi><mml:mn>2</mml:mn></mml:msup></mml:mrow>
+      <mml:annotation encoding="application/x-tex">E = m c^{2}</mml:annotation>
+    </mml:semantics></mml:math>
+  </disp-formula>
+</article>
