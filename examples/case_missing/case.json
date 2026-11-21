@@ -1,0 +1,7 @@
+{
+ "case_id": "EXAMPLE-MISSING",
+ "note": "synthetic example of the C02 branch: a snapshot with no formula representation and no recomputable data",
+ "output_contract": {
+  "required": ["formulas", "symbol_table", "derivation", "numeric_check"]
+ }
+}
