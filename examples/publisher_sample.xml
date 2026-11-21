@@ -22,4 +22,16 @@
       <mml:mo>&#x2062;</mml:mo><mml:mi>m</mml:mi><mml:msup><mml:mi>k</mml:mi><mml:mn>2</mml:mn></mml:msup>
     </mml:math>
   </disp-formula>
+  <disp-formula id="FD4">
+    <label>(4)</label>
+    <alternatives>
+      <tex-math id="tx4"><?equation-image-name tx4.gif?>\documentclass[12pt]{minimal}
+        \usepackage{amsmath}
+        \begin{document}$h_{x}=h-V_\xi$\end{document}
+      </tex-math>
+      <mml:math><mml:mrow><mml:msub><mml:mi>h</mml:mi><mml:mi>x</mml:mi></mml:msub>
+        <mml:mo>=</mml:mo><mml:mi>h</mml:mi><mml:mo>-</mml:mo>
+        <mml:msub><mml:mi>V</mml:mi><mml:mi>xi</mml:mi></mml:msub></mml:mrow></mml:math>
+    </alternatives>
+  </disp-formula>
 </article>
