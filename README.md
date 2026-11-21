@@ -2,6 +2,10 @@
 
 一个把论文公式变成可复核结构的 Skill：保结构 LaTeX、可回溯原文的变量表、分步推导说明、数值代算核验，以及材料缺失时明确的状态标注。
 
+## 三分钟上手
+
+见 [docs/quickstart.md](docs/quickstart.md)：一条命令跑完流水线并打印摘要，再补内容与自检。
+
 ## 依赖
 
 - Python 3.8+，仅用标准库（`xml.etree`、`json`、`csv`、`re`、`math`）。
@@ -92,11 +96,13 @@ python install.py --target /app/submission
 
 ## 版本
 
+- 1.6.0：run_case 一条命令收敛全流程并输出 summary.json；新增 docs/quickstart.md。
 - 1.5.0：符号段落级定位（first_body_location）与公式交叉引用（link_refs）；正文段落带 [pID] 标记。
 - 1.4.0：结构还原基准 8/8；支持不可见算符（U+2061/U+2062）、alttext 优先、JATS label 公式编号、命令与字母间距；新增 latex_compare 等价比较。
 - 1.3.0：新增量纲核对 dimension_check.py（支持派生单位与括号），示例与自检覆盖单位错误检出。
 - 1.2.0：新增 10 条自建基准与 `install.py`；抽取优先采用原文 LaTeX 注释、继承 `disp-formula` 级别 ID、标记截断；数值核验增加数量级区间核对；示例输出显式标注为示例。
 - 1.1.0：新增 audit.py 自审清单、munderover/matrix 覆盖、缺失材料示例；数值核验去除 antlr4 依赖。
+
 
 
 
