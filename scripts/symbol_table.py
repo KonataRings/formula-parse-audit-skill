@@ -84,6 +84,22 @@ def main():
     body = open(a.text, encoding="utf-8", errors="replace").read() if a.text else ""
     rows = [json.loads(l) for l in open(a.formulas, encoding="utf-8") if l.strip()]
 
+    # body.txt may carry "[p12] ..." markers, one paragraph per line
+    paragraphs = []
+    for line in body.splitlines():
+        m = re.match(r"\[([^\]]+)\]\s*(.*)", line)
+        if m:
+            paragraphs.append((m.group(1), m.group(2)))
+        elif line.strip():
+            paragraphs.append((None, line))
+
+    def locate(sym):
+        base = sym.split("_")[0]
+        for pid, text in paragraphs:
+            if re.search(r"(?<![A-Za-z])%s(?![A-Za-z])" % re.escape(base), text):
+                return pid
+        return None
+
     table = {}
     for r in rows:
         latex = r.get("latex") or ""
@@ -95,11 +111,13 @@ def main():
     with open(a.output, "w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(["symbol", "first_formula_id", "occurrences", "latex_example",
-                    "meaning", "unit", "range", "definition_status"])
+                    "meaning", "unit", "range", "first_body_location", "definition_status"])
         for key, rec in sorted(table.items(), key=lambda kv: (-kv[1]["count"], kv[0])):
-            in_body = bool(body) and re.search(r"(?<![A-Za-z])%s(?![A-Za-z])" % re.escape(key), body)
+            loc = locate(key)
+            in_body = loc is not None
             w.writerow([key, rec["first"], rec["count"], rec["example"],
-                        "", "", "", "mentioned_in_body" if in_body else "undefined_in_material"])
+                        "", "", "", loc or "", 
+                        "mentioned_in_body(%s)" % loc if in_body else "undefined_in_material"])
     print(json.dumps({"symbols": len(table), "output": a.output,
                       "undefined": sum(1 for k in table if not body)}, ensure_ascii=False))
 
