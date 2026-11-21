@@ -33,8 +33,7 @@ GREEK = {
 }
 
 OPS = {
-    "\u00d7": r"\times", "\u22c5": r"\cdot", "\u00b7": r"\cdot", "\u2212": "-",
-    "\u2264": r"\le", "\u2265": r"\ge", "\u2260": r"\neq", "\u2248": r"\approx",
+    "\u00d7": r"\times", "\u22c5": r"\cdot", "\u00b7": r"\cdot", "\u2212": "-",    "\u2264": r"\le", "\u2265": r"\ge", "\u2260": r"\neq", "\u2248": r"\approx",
     "\u221d": r"\propto", "\u2202": r"\partial", "\u2207": r"\nabla",
     "\u2211": r"\sum", "\u220f": r"\prod", "\u222b": r"\int", "\u221e": r"\infty",
     "\u2208": r"\in", "\u2192": r"\to", "\u00b1": r"\pm", "\u2213": r"\mp",
@@ -48,6 +47,26 @@ OPS = {
     "\u03c5": r"\upsilon", "\u03b9": r"\iota", "\u03b6": r"\zeta", "\u039b": r"\Lambda",
     "\u03a6": r"\Phi", "\u03a8": r"\Psi", "\u03a0": r"\Pi",
 }
+
+
+INVISIBLE = {
+    "\u2061": "",      # function application: sin(x), not sin*(x)
+    "\u2062": "",      # invisible times: implicit product
+    "\u2063": "",      # invisible separator
+    "\u200b": "",      # zero width space
+    "\u00a0": " ",     # non-breaking space
+    "\u2009": r"\,",   # thin space
+    "\u200a": r"\,",   # hair space
+    "\u2044": "/",     # fraction slash
+    "\u2212": "-",     # minus sign
+    "\u2013": "-",
+}
+
+
+def clean_text(s):
+    for k, v in INVISIBLE.items():
+        s = s.replace(k, v)
+    return s
 
 
 def _tag(el):
@@ -67,12 +86,30 @@ def _txt(el):
 
 
 def source_tex(el):
-    """Return the publisher's own LaTeX when the MathML carries it."""
+    """Return the publisher's own LaTeX: annotation first, then the alttext attribute."""
     for node in el.iter():
         if _tag(node) in ("annotation", "annotation-xml"):
             enc = (node.attrib.get("encoding") or "").lower()
             if "tex" in enc:
                 text = "".join(node.itertext()).strip()
+                if text:
+                    return text
+    alt = el.attrib.get("alttext") or el.attrib.get("alttext".upper())
+    if alt and "\\" in alt:
+        return alt.strip()
+    return None
+
+
+def find_label(el, parents, depth=4):
+    """JATS keeps the equation number in <label> next to the formula."""
+    cur = el
+    for _ in range(depth):
+        cur = parents.get(cur)
+        if cur is None:
+            break
+        for child in cur:
+            if _tag(child) == "label":
+                text = "".join(child.itertext()).strip()
                 if text:
                     return text
     return None
@@ -96,7 +133,9 @@ def convert(el):
         return "".join(parts)
 
     if t == "mi":
-        name = (el.text or "").strip()
+        name = clean_text((el.text or "").strip())
+        if not name:
+            return ""
         if name in OPS:            # a Greek character kept as a literal
             return OPS[name]
         if len(name) > 1 and name in GREEK:
@@ -106,14 +145,19 @@ def convert(el):
         return name
 
     if t == "mn":
-        return (el.text or "").strip()
+        return clean_text((el.text or "").strip())
 
     if t == "mo":
-        raw = (el.text or "").strip()
+        raw_orig = (el.text or "").strip()
+        if raw_orig in INVISIBLE and INVISIBLE[raw_orig] == "":
+            return ""              # U+2061/U+2062 and friends must not reach LaTeX
+        raw = clean_text(raw_orig)
+        if not raw:
+            return ""
         return OPS.get(raw, raw)
 
     if t == "mtext":
-        return r"\text{%s}" % (el.text or "").strip()
+        return r"\text{%s}" % clean_text((el.text or "").strip())
 
     if t == "mfrac":
         num = convert(kids[0]) if len(kids) > 0 else ""
@@ -147,7 +191,10 @@ def convert(el):
     if t == "mfenced":
         open_ = el.attrib.get("open", "(")
         close = el.attrib.get("close", ")")
-        return open_ + ",".join(convert(c) for c in kids) + close
+        body = ",".join(convert(c) for c in kids)
+        if kids and _tag(kids[0]) == "mtable" and open_ in ("{", "\\{"):
+            return r"\begin{cases}%s\end{cases}" % _cases_body(kids[0])
+        return open_ + body + close
 
     if t == "munderover":
         base = convert(kids[0]) if kids else ""
@@ -178,6 +225,32 @@ def convert(el):
     # unknown node: keep children so nothing silently disappears
     body = "".join(convert(c) for c in kids)
     return body if body else _escape_text(el.text or "")
+
+
+COMMANDS = sorted({c for c in list(GREEK.values()) + list(OPS.values()) if c.startswith("\\")},
+                  key=len, reverse=True)
+
+
+def separate_commands(latex):
+    """`\\pi` followed by a letter would be read as a longer control word."""
+    for cmd in COMMANDS:
+        latex = re.sub(re.escape(cmd) + r"(?=[A-Za-z])", lambda m: m.group(0) + " ", latex)
+    return latex
+
+
+def _cells(row):
+    return [convert(td).strip() for td in list(row)]
+
+
+def _cases_body(table):
+    lines = []
+    for row in list(table):
+        cells = _cells(row)
+        if len(cells) >= 2:
+            lines.append("%s & %s" % (cells[0], cells[1]))
+        elif cells:
+            lines.append(cells[0])
+    return r" \\ ".join(lines)
 
 
 def _escape_text(s):
@@ -231,6 +304,9 @@ def scan_file(path):
     for el in nodes:
         annotation = source_tex(el)
         latex = re.sub(r"\s+", " ", annotation).strip() if annotation else convert(el).strip()
+        # a control word followed by a letter would be read as a longer command:
+        # \pim is an error, \pi m is not
+        latex = separate_commands(latex)
         fid, container = inherited_id(el)
         balance = latex.count("{") - latex.count("}")
         out.append({"id": fid,
@@ -240,6 +316,7 @@ def scan_file(path):
                     "depth": _depth(latex),
                     "method": "source_annotation" if annotation else "reconstructed",
                     "container": container,
+                    "label": find_label(el, parents),
                     "truncated": balance != 0,
                     "source": os.path.basename(path)})
     return out
