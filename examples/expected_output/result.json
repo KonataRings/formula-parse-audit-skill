@@ -1,0 +1,149 @@
+{
+ "case_id": "EXAMPLE-000",
+ "status": "success",
+ "sources": [
+  {
+   "id": "eq1",
+   "kind": "fraction",
+   "source": "source-formulas.xml"
+  },
+  {
+   "id": "eq2",
+   "kind": "fraction",
+   "source": "source-formulas.xml"
+  }
+ ],
+ "uncertainty": [
+  {
+   "kind": "undefined_symbols",
+   "symbols": [
+    "k_B",
+    "C_p",
+    "T",
+    "h",
+    "nu_D"
+   ]
+  }
+ ],
+ "changes": [
+  {
+   "step": "formula_extraction",
+   "formulas": 2
+  },
+  {
+   "step": "symbol_table",
+   "symbols": 7
+  },
+  {
+   "step": "contract_fill",
+   "filled": 4,
+   "missing": 0
+  }
+ ],
+ "formulas": [
+  {
+   "id": "eq1",
+   "latex": "{C}_{p}=\\frac{12}{5}{\\pi}^{4}N{k}_{B}{(\\frac{T}{\\Theta})}^{3}",
+   "source": "artifacts/source-formulas.xml",
+   "kind": "fraction"
+  },
+  {
+   "id": "eq2",
+   "latex": "\\Theta=\\frac{h{\\nu}_{D}}{{k}_{B}}",
+   "source": "artifacts/source-formulas.xml",
+   "kind": "fraction"
+  }
+ ],
+ "symbol_table": [
+  {
+   "symbol": "C_p",
+   "meaning": "lattice heat capacity at constant pressure",
+   "unit": "not_reported",
+   "range": "not_reported",
+   "source": "eq1"
+  },
+  {
+   "symbol": "N",
+   "meaning": "number of atoms",
+   "unit": "not_reported",
+   "range": "not_reported",
+   "source": "p1"
+  },
+  {
+   "symbol": "k_B",
+   "meaning": "Boltzmann constant",
+   "unit": "not_reported",
+   "range": "not_reported",
+   "source": "eq1/eq2"
+  },
+  {
+   "symbol": "T",
+   "meaning": "temperature",
+   "unit": "not_reported",
+   "range": "low-temperature limit",
+   "source": "eq1"
+  },
+  {
+   "symbol": "Theta",
+   "meaning": "Debye temperature",
+   "unit": "not_reported",
+   "range": "not_reported",
+   "source": "p1/eq2"
+  },
+  {
+   "symbol": "h",
+   "meaning": "Planck constant",
+   "unit": "not_reported",
+   "range": "not_reported",
+   "source": "eq2"
+  },
+  {
+   "symbol": "nu_D",
+   "meaning": "Debye frequency",
+   "unit": "not_reported",
+   "range": "not_reported",
+   "source": "eq2"
+  }
+ ],
+ "derivation": [
+  {
+   "step": 1,
+   "from": [
+    "eq1"
+   ],
+   "claim": "the low-temperature heat capacity scales as (T/Theta)^3 in the Debye model",
+   "assumptions": [
+    "T << Theta",
+    "single Debye temperature for all branches"
+   ],
+   "source_id": "eq1"
+  },
+  {
+   "step": 2,
+   "from": [
+    "eq1",
+    "eq2"
+   ],
+   "claim": "Theta is fixed by the Debye frequency and the Boltzmann constant",
+   "assumptions": [
+    "nu_D is the Debye cutoff frequency"
+   ],
+   "source_id": "eq2"
+  }
+ ],
+ "numeric_check": {
+  "formula_id": "eq1",
+  "expression": "((12)/(5))*(pi**(4))*N*(k_B)*((((T)/(Theta)))**(3))",
+  "evaluated_with": {
+   "N": 1.0,
+   "k_B": 1.380649e-23,
+   "T": 10.0,
+   "Theta": 1000.0
+  },
+  "value": 3.2277063390481063e-27,
+  "unit": "example assigns J/K; the synthetic material reports no units",
+  "note": "value produced by scripts/numeric_check.py, not typed by hand"
+ },
+ "example": true,
+ "example_notice": "示例输出：由合成示例案例产生，用于说明接口与字段，不是平台正式案例的结果"
+}
