@@ -110,6 +110,35 @@ def main():
     refs = json.load(open(refs_out, encoding="utf-8"))
     assert refs["edges"] and refs["edges"][0]["formula_id"] == "FD1", refs["edges"]
 
+    # failure handling: malformed XML must not crash, it degrades
+    bad = os.path.join(tmp, "broken.xml")
+    open(bad, "w", encoding="utf-8").write("<article><disp-formula><math><mi>x")
+    bad_out = os.path.join(tmp, "broken.jsonl")
+    run([os.path.join(HERE, "scripts", "formula_extract.py"),
+         "--input", bad, "--output", bad_out])
+
+    # equivalence: same meaning vs different meaning
+    cmp_same = os.path.join(tmp, "same.json")
+    run([os.path.join(HERE, "scripts", "latex_compare.py"), "--a", "E=mc^{2}",
+         "--b", "E = m c^2", "--symbols", "m,c", "--output", cmp_same])
+    same = json.load(open(cmp_same, encoding="utf-8"))
+    assert same["structural_equal"] and same["numeric_equivalent"] is True, same
+
+    cmp_diff = os.path.join(tmp, "diff.json")
+    run([os.path.join(HERE, "scripts", "latex_compare.py"), "--a", "a+b", "--b", "a-b",
+         "--symbols", "a,b", "--output", cmp_diff])
+    diff = json.load(open(cmp_diff, encoding="utf-8"))
+    assert diff["structural_equal"] is False and diff["numeric_equivalent"] is False, diff
+
+    # unknown unit must fail loudly rather than be ignored
+    units_bad = os.path.join(tmp, "units_bad.json")
+    json.dump({"x": "furlong"}, open(units_bad, "w", encoding="utf-8"))
+    p = subprocess.run([sys.executable, os.path.join(HERE, "scripts", "dimension_check.py"),
+                        "--latex", "y=x", "--units", units_bad,
+                        "--output", os.path.join(tmp, "dims_bad.json")],
+                       capture_output=True, text=True)
+    assert p.returncode != 0 and "unknown unit" in p.stdout, p.stdout
+
     dims = json.load(open(os.path.join(work, "dims.json"), encoding="utf-8"))
     assert dims.get("dimension_match") is True, dims
     assert dims.get("result_dimension") == "kg^1 m^2/K^1 s^2", dims.get("result_dimension")
