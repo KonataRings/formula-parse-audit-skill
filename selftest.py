@@ -92,6 +92,11 @@ def main():
     assert ids["FD2"]["method"] == "source_annotation", ids["FD2"]
     assert ids["FD2"]["latex"].replace(" ", "") == "E=mc^{2}", ids["FD2"]["latex"]
     assert ids["FD1"]["container"] == "disp-formula", ids["FD1"]
+    assert ids["FD1"]["label"] == "(3)", ids["FD1"]
+    assert ids["FD3"]["method"] == "source_annotation", ids["FD3"]
+    assert "\u2062" not in ids["FD3"]["latex"], ids["FD3"]["latex"]
+    assert not any("\u2061" in (p["latex"] or "") or "\u2062" in (p["latex"] or "") for p in pub), \
+        "invisible operators must not reach LaTeX"
 
     dims = json.load(open(os.path.join(work, "dims.json"), encoding="utf-8"))
     assert dims.get("dimension_match") is True, dims
