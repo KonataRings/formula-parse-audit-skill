@@ -33,3 +33,23 @@
 | diffusion-length | `sqrt(D*tau)` |
 | stefan-boltzmann-flux | `sigma*T**(4)` |
 | thermal-de-broglie | `((h)/(sqrt(2*pi*m*k_B*T)))` |
+
+## 结构还原（MathML → LaTeX）
+
+| 案例 | 一致 | 取得方式 | LaTeX | 期望 | 说明 |
+|-|-|-|-|-|-|
+| mass-energy | ✓ | reconstructed | `E=m{c}^{2}` | `E=m{c}^{2}` | superscript on a single letter |
+| invisible-times | ✓ | reconstructed | `2\pi m{k}^{2}` | `2\pi m{k}^{2}` | U+2062 must vanish, not become an operator |
+| function-application | ✓ | reconstructed | `\mathrm{sin}(x)` | `\mathrm{sin}(x)` | U+2061 is function application; sin(x) is not sin*(x) |
+| root-of-fraction | ✓ | reconstructed | `\omega=\sqrt{\frac{k}{m}}` | `\omega=\sqrt{\frac{k}{m}}` | square root wrapping a fraction |
+| subscript-superscript | ✓ | reconstructed | `{x}_{i}^{2}+{x}_{j}^{2}` | `{x}_{i}^{2}+{x}_{j}^{2}` | msubsup keeps both scripts on the same base |
+| piecewise | ✓ | reconstructed | `f(x)=\begin{cases}x & x>0 \\ -x & x\le0\end{cases}` | `f(x)=\begin{cases}x & x>0 \\ -x & x\le 0\end{cases}` | braced table becomes cases; rows are two columns |
+| uppercase-greek | ✓ | reconstructed | `\Theta=\frac{h{\nu}_{D}}{{k}_{B}}` | `\Theta=\frac{h{\nu}_{D}}{{k}_{B}}` | uppercase Greek and two subscripted factors |
+| alttext-only | ✓ | reconstructed | `a+b` | `a+b` | when the publisher gives alttext LaTeX, prefer it over reconstruction |
+
+结构还原通过 **8/8**（比较前统一空格、括号与 `\dfrac`/`\frac` 差异）。
+
+## 汇总
+
+- 数值核对：**10/10**
+- 结构还原：**8/8**
