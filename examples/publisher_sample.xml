@@ -2,7 +2,7 @@
 <!-- Synthetic stand-in for a publisher XML: carries a disp-formula id, an equation
      label, an alttext-only formula and invisible operators (U+2062). -->
 <article xmlns:mml="http://www.w3.org/1998/Math/MathML">
-  <p id="p1">The oscillator frequency follows from the stiffness and the mass.</p>
+  <p id="p1">The oscillator frequency follows from the stiffness and the mass; Eq. (3) states the relation used below.</p>
   <disp-formula id="FD1">
     <label>(3)</label>
     <mml:math><mml:mrow>
