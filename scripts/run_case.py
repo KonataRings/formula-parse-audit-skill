@@ -154,9 +154,67 @@ def main():
                        "fill answers.json and re-run assemble_result.py"]}
     json.dump(report, open(os.path.join(a.work, "run_report.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
-    print(json.dumps({"case_id": inventory["case_id"], "artifacts": len(artifacts),
-                      "formulas": os.path.exists(formulas_path), "status": status},
-                     ensure_ascii=False))
+
+    # one audit pass so the agent starts from a checklist, not a blank page
+    if os.path.exists(os.path.join(a.output, "result.json")):
+        steps.append(run([sys.executable, os.path.join(HERE, "audit.py"),
+                          "--work", a.work, "--result", os.path.join(a.output, "result.json"),
+                          "--case", case_path,
+                          "--output", os.path.join(a.output, "audit.md")]))
+
+    summary = build_summary(a.work, a.output, case)
+    json.dump(summary, open(os.path.join(a.work, "summary.json"), "w", encoding="utf-8"),
+              ensure_ascii=False, indent=1)
+    print(json.dumps(summary, ensure_ascii=False))
+
+
+def _read_json(path):
+    if not os.path.exists(path):
+        return None
+    try:
+        return json.load(open(path, encoding="utf-8-sig"))
+    except Exception:
+        return None
+
+
+def build_summary(work, output, case):
+    formulas = []
+    fpath = os.path.join(work, "formulas.jsonl")
+    if os.path.exists(fpath):
+        formulas = [json.loads(l) for l in open(fpath, encoding="utf-8") if l.strip()]
+    symbols = []
+    spath = os.path.join(work, "symbols.csv")
+    if os.path.exists(spath):
+        import csv as _csv
+        with open(spath, encoding="utf-8-sig") as f:
+            symbols = list(_csv.DictReader(f))
+    check = _read_json(os.path.join(work, "check.json")) or {}
+    dims = _read_json(os.path.join(work, "dims.json")) or {}
+    refs = _read_json(os.path.join(work, "refs.json")) or {}
+    result = _read_json(os.path.join(output, "result.json")) or {}
+
+    contract = []
+    oc = case.get("output_contract") or {}
+    if isinstance(oc, dict):
+        contract = list(oc.get("required") or (oc.get("properties") or {}).keys() or [])
+
+    return {
+        "case_id": case.get("case_id") or case.get("id"),
+        "formulas": len(formulas),
+        "formulas_with_id": sum(1 for f in formulas if f.get("id")),
+        "formulas_from_source_latex": sum(1 for f in formulas if f.get("method") == "source_annotation"),
+        "truncated": [f.get("id") for f in formulas if f.get("truncated")],
+        "formula_labels": {f.get("id"): f.get("label") for f in formulas if f.get("label")},
+        "symbols": len(symbols),
+        "symbols_with_location": sum(1 for s in symbols if s.get("first_body_location")),
+        "numeric_value": (check.get("checks") or {}).get("value"),
+        "numeric_status": check.get("status"),
+        "dimension": dims.get("result_dimension"),
+        "dimension_match": dims.get("dimension_match"),
+        "reference_edges": len(refs.get("edges") or []),
+        "contract_fields": contract,
+        "status": result.get("status"),
+    }
 
 
 if __name__ == "__main__":
