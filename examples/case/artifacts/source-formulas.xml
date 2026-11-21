@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Minimal synthetic example used only to demonstrate the pipeline. -->
+<article>
+  <p id="p1">The low-temperature limit of the lattice heat capacity is written with the Debye temperature Theta and the number of atoms N.</p>
+  <math id="eq1">
+    <mrow>
+      <msub><mi>C</mi><mi>p</mi></msub>
+      <mo>=</mo>
+      <mfrac>
+        <mn>12</mn>
+        <mn>5</mn>
+      </mfrac>
+      <msup><mi>&#960;</mi><mn>4</mn></msup>
+      <mi>N</mi>
+      <msub><mi>k</mi><mi>B</mi></msub>
+      <msup>
+        <mrow><mo>(</mo><mfrac><mi>T</mi><mi>&#920;</mi></mfrac><mo>)</mo></mrow>
+        <mn>3</mn>
+      </msup>
+    </mrow>
+  </math>
+  <math id="eq2">
+    <mrow>
+      <mi>&#920;</mi><mo>=</mo><mfrac><mrow><mi>h</mi><msub><mi>&#957;</mi><mi>D</mi></msub></mrow><msub><mi>k</mi><mi>B</mi></msub></mfrac>
+    </mrow>
+  </math>
+</article>
