@@ -38,6 +38,12 @@ OPS = {
     "\u2211": r"\sum", "\u220f": r"\prod", "\u222b": r"\int", "\u221e": r"\infty",
     "\u2208": r"\in", "\u2192": r"\to", "\u00b1": r"\pm", "\u2213": r"\mp",
     "\u27e8": r"\langle", "\u27e9": r"\rangle", "\u2026": r"\ldots",
+    "\u2032": "'", "\u2033": "''", "\u2300": r"\varnothing", "\u00b0": r"^{\circ}",
+    "\u2103": r"^{\circ}\mathrm{C}", "\u2030": r"\text{\textperthousand}",
+    "\u2245": r"\simeq", "\u2243": r"\simeq", "\u2261": r"\equiv", "\u2217": "*",
+    "\u22a5": r"\perp", "\u2225": r"\parallel", "\u2297": r"\otimes", "\u2295": r"\oplus",
+    "\u2282": r"\subset", "\u2286": r"\subseteq", "\u222a": r"\cup", "\u2229": r"\cap",
+    "\u2200": r"\forall", "\u2203": r"\exists", "\u2205": r"\varnothing",
     "\u03b1": r"\alpha", "\u03b2": r"\beta", "\u03b3": r"\gamma", "\u03b4": r"\delta",
     "\u03b5": r"\epsilon", "\u03b8": r"\theta", "\u03bb": r"\lambda", "\u03bc": r"\mu",
     "\u03c0": r"\pi", "\u03c1": r"\rho", "\u03c3": r"\sigma", "\u03c4": r"\tau",
@@ -85,19 +91,59 @@ def _txt(el):
         (c.tail or "") for c in el)
 
 
-def source_tex(el):
-    """Return the publisher's own LaTeX: annotation first, then the alttext attribute."""
+def clean_texmath(raw):
+    """JATS <tex-math> often wraps a full LaTeX document from the typesetter."""
+    s = re.sub(r"<\?.*?\?>", " ", raw, flags=re.S)
+    s = s.replace("<![CDATA[", " ").replace("]]>", " ")
+    if "\\begin{document}" in s:
+        s = s.split("\\begin{document}", 1)[1]
+    if "\\end{document}" in s:
+        s = s.split("\\end{document}", 1)[0]
+    s = re.sub(r"\s+", " ", s).strip()
+    for a, b in (("$$", "$$"), ("$", "$"), ("\\[", "\\]"), ("\\(", "\\)")):
+        if len(s) > len(a) + len(b) and s.startswith(a) and s.endswith(b):
+            s = s[len(a):-len(b)].strip()
+    if not s or "\\documentclass" in s or "\\usepackage" in s:
+        return None
+    return s
+
+
+def find_texmath(el, parents, depth=3):
+    """The publisher's LaTeX may sit next to the MathML inside <alternatives>.
+
+    Only direct siblings are inspected: walking a whole ancestor subtree would
+    hand one formula the LaTeX of its neighbour further down the page.
+    """
+    cur = el
+    for _ in range(depth):
+        cur = parents.get(cur)
+        if cur is None:
+            break
+        for node in list(cur):
+            if _tag(node) == "tex-math":
+                text = clean_texmath("".join(node.itertext()))
+                if text:
+                    return text
+    return None
+
+
+def source_tex(el, parents=None):
+    """Return (latex, method) for the publisher's own LaTeX, if any."""
     for node in el.iter():
         if _tag(node) in ("annotation", "annotation-xml"):
             enc = (node.attrib.get("encoding") or "").lower()
             if "tex" in enc:
                 text = "".join(node.itertext()).strip()
                 if text:
-                    return text
-    alt = el.attrib.get("alttext") or el.attrib.get("alttext".upper())
+                    return text, "source_annotation"
+    if parents:
+        tex = find_texmath(el, parents)
+        if tex:
+            return tex, "source_texmath"
+    alt = el.attrib.get("alttext")
     if alt and "\\" in alt:
-        return alt.strip()
-    return None
+        return alt.strip(), "source_alttext"
+    return None, None
 
 
 def find_label(el, parents, depth=4):
@@ -227,15 +273,56 @@ def convert(el):
     return body if body else _escape_text(el.text or "")
 
 
-COMMANDS = sorted({c for c in list(GREEK.values()) + list(OPS.values()) if c.startswith("\\")},
-                  key=len, reverse=True)
+SIMPLE = {r"\frac", r"\sqrt", r"\mathrm", r"\text", r"\begin", r"\end", r"\left", r"\right",
+          r"\sum", r"\int", r"\prod", r"\partial", r"\nabla", r"\infty", r"\approx",
+          r"\le", r"\ge", r"\neq", r"\pm", r"\mp", r"\sim", r"\to", r"\langle", r"\rangle",
+          r"\mathbb", r"\mathcal", r"\hat", r"\bar", r"\vec", r"\dot", r"\ddot", r"\times",
+          r"\cdot", r"\log", r"\ln", r"\exp", r"\sin", r"\cos", r"\tan", r"\max", r"\min",
+          r"\operatorname", r"\mathrm{d}", r"\mid", r"\vert", r"\Vert"}
+COMMANDS = sorted({c for c in list(GREEK.values()) + list(OPS.values()) + list(SIMPLE)
+                   if c.startswith("\\")}, key=len, reverse=True)
+KNOWN = set(COMMANDS)
 
 
 def separate_commands(latex):
-    """`\\pi` followed by a letter would be read as a longer control word."""
-    for cmd in COMMANDS:
-        latex = re.sub(re.escape(cmd) + r"(?=[A-Za-z])", lambda m: m.group(0) + " ", latex)
-    return latex
+    """`\\pi` followed by a letter would be read as a longer control word.
+
+    Only the reconstructed path goes through here; publisher LaTeX is left alone.
+    The scan takes the longest known command so that `\\left` is never cut to `\\le`.
+    """
+    out, i, n = [], 0, len(latex)
+    while i < n:
+        ch = latex[i]
+        if ch == "\\" and i + 1 < n and latex[i + 1].isalpha():
+            j = i + 1
+            while j < n and latex[j].isalpha():
+                j += 1
+            word = latex[i:j]
+            if word in KNOWN:
+                out.append(word)
+                i = j
+                continue
+            best = None
+            for k in range(j - 1, i + 1, -1):
+                if latex[i:k] in KNOWN:
+                    best = latex[i:k]
+                    break
+            if best:
+                out.append(best + " ")
+                i += len(best)
+                continue
+            out.append(word)
+            i = j
+            continue
+        out.append(ch)
+        i += 1
+    return "".join(out)
+
+
+def brace_balance(latex):
+    """Escaped braces \\{ \\} are literals, not grouping, so they do not count."""
+    s = latex.replace(r"\{", "").replace(r"\}", "")
+    return s.count("{") - s.count("}")
 
 
 def _cells(row):
@@ -302,19 +389,23 @@ def scan_file(path):
         return None, container
 
     for el in nodes:
-        annotation = source_tex(el)
-        latex = re.sub(r"\s+", " ", annotation).strip() if annotation else convert(el).strip()
-        # a control word followed by a letter would be read as a longer command:
-        # \pim is an error, \pi m is not
-        latex = separate_commands(latex)
+        annotation, method = source_tex(el, parents)
+        if annotation:
+            # publisher LaTeX is authoritative: leave it byte for byte
+            latex = re.sub(r"\s+", " ", annotation).strip()
+        else:
+            latex = convert(el).strip()
+            # a control word followed by a letter would be read as a longer command:
+            # \pim is an error, \pi m is not
+            latex = separate_commands(latex)
         fid, container = inherited_id(el)
-        balance = latex.count("{") - latex.count("}")
+        balance = brace_balance(latex)
         out.append({"id": fid,
                     "latex": latex,
                     "plain": re.sub(r"\s+", " ", latex),
                     "kind": classify(latex),
                     "depth": _depth(latex),
-                    "method": "source_annotation" if annotation else "reconstructed",
+                    "method": method or "reconstructed",
                     "container": container,
                     "label": find_label(el, parents),
                     "truncated": balance != 0,
