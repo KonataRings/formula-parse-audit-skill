@@ -6,6 +6,27 @@
 
 见 [docs/quickstart.md](docs/quickstart.md)：一条命令跑完流水线并打印摘要，再补内容与自检。
 
+## 真实语料核验
+
+拿三篇 PMC 开放获取论文的全文 XML（Springer 与 Elsevier 两类排版）跑 `validate_corpus.py`，结果如下：
+
+| 指标 | 数值 |
+|-|-|
+| 公式总数 | 1973（`disp-formula` 499，`inline-formula` 1473） |
+| 带来源 id | 1973（100%） |
+| 带公式编号 `<label>` | 789 |
+| 直接采用出版社原文 LaTeX | 1330（67.4%，全部经 `<tex-math>`） |
+| 空结果 | 0 |
+| 括号不平衡 | 0 |
+
+复现命令（把你手上的 XML 放进一个目录即可）：
+
+```bash
+python scripts/validate_corpus.py --corpus path/to/xml --output report.json
+```
+
+这批数据暴露并修掉的问题：`\left\{` 被命令间距逻辑拆成 `\le ft`、`\{` 被误算作不平衡括号、`⌀`/`″` 等符号原样漏出、`<tex-math>` 需剥掉 `\documentclass` 导言区、以及跨公式串用 LaTeX（一个公式读到邻行的 `tex-math`）。
+
 ## 依赖
 
 - Python 3.8+，仅用标准库（`xml.etree`、`json`、`csv`、`re`、`math`）。
@@ -25,6 +46,7 @@ scripts/audit.py              生成 audit.md 自审清单
 scripts/dimension_check.py    量纲引擎：带入符号单位求值，核对结果量纲
 scripts/latex_compare.py      结构规范化比较与数值等价抽样
 scripts/link_refs.py          正文编号引用连到带 label 的公式
+scripts/validate_corpus.py    出版商标 XML 的抽取覆盖率报告
 templates/                    变量表与报告模板
 examples/case/                合成示例（含 case.json、values.json、答案与公式 XML）
 examples/case_missing/        缺公式表示的示例，演示 insufficient_evidence 分支
@@ -96,6 +118,7 @@ python install.py --target /app/submission
 
 ## 版本
 
+- 1.8.0：接入 JATS tex-math 原文 LaTeX（剥导言区）、真实语料核验 1973 个公式 0 空结果 0 截断、validate_corpus.py。
 - 1.7.0：自检覆盖失效场景（畸形 XML 不崩溃、语义不等价判定、未知单位报错）。
 - 1.6.0：run_case 一条命令收敛全流程并输出 summary.json；新增 docs/quickstart.md。
 - 1.5.0：符号段落级定位（first_body_location）与公式交叉引用（link_refs）；正文段落带 [pID] 标记。
@@ -103,6 +126,7 @@ python install.py --target /app/submission
 - 1.3.0：新增量纲核对 dimension_check.py（支持派生单位与括号），示例与自检覆盖单位错误检出。
 - 1.2.0：新增 10 条自建基准与 `install.py`；抽取优先采用原文 LaTeX 注释、继承 `disp-formula` 级别 ID、标记截断；数值核验增加数量级区间核对；示例输出显式标注为示例。
 - 1.1.0：新增 audit.py 自审清单、munderover/matrix 覆盖、缺失材料示例；数值核验去除 antlr4 依赖。
+
 
 
 
