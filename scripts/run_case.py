@@ -76,11 +76,15 @@ def main():
                     root = ET.fromstring(open(p, encoding="utf-8").read())
                 except Exception:
                     continue
+                auto = 0
                 for el in root.iter():
-                    if isinstance(el.tag, str) and el.tag.split("}")[-1] in ("p", "title", "abstract"):
+                    if isinstance(el.tag, str) and el.tag.split("}")[-1] in ("p", "title", "abstract", "label", "caption"):
                         chunk = "".join(el.itertext()).strip()
                         if chunk:
-                            chunks.append(chunk)
+                            auto += 1
+                            ident = el.attrib.get("id") or "%s-%d" % (
+                                os.path.basename(p).split(".")[0], auto)
+                            chunks.append("[%s] %s" % (ident, chunk))
             if chunks:
                 body = os.path.join(a.work, "body.txt")
                 open(body, "w", encoding="utf-8").write("\n".join(chunks))
@@ -90,6 +94,10 @@ def main():
         if text_files:
             cmd += ["--text", text_files[0]]
         steps.append(run(cmd))
+        if text_files and os.path.basename(text_files[0]) == "body.txt":
+            steps.append(run([sys.executable, os.path.join(HERE, "link_refs.py"),
+                              "--formulas", formulas_path, "--body", text_files[0],
+                              "--output", os.path.join(a.work, "refs.json")]))
 
     pdfs = [p for p in artifacts if p.lower().endswith(".pdf")]
     for pdf in pdfs:
