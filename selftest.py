@@ -98,6 +98,15 @@ def main():
     assert not any("\u2061" in (p["latex"] or "") or "\u2062" in (p["latex"] or "") for p in pub), \
         "invisible operators must not reach LaTeX"
 
+    body = os.path.join(tmp, "body.txt")
+    open(body, "w", encoding="utf-8").write(
+        "[p1] The oscillator frequency follows from the stiffness and the mass; Eq. (3) states the relation.\n")
+    refs_out = os.path.join(tmp, "refs.json")
+    run([os.path.join(HERE, "scripts", "link_refs.py"), "--formulas", pub_out,
+         "--body", body, "--output", refs_out])
+    refs = json.load(open(refs_out, encoding="utf-8"))
+    assert refs["edges"] and refs["edges"][0]["formula_id"] == "FD1", refs["edges"]
+
     dims = json.load(open(os.path.join(work, "dims.json"), encoding="utf-8"))
     assert dims.get("dimension_match") is True, dims
     assert dims.get("result_dimension") == "kg^1 m^2/K^1 s^2", dims.get("result_dimension")
