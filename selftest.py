@@ -54,6 +54,9 @@ def main():
     assert syms, "symbol table is empty"
 
     res = json.load(open(os.path.join(out, "result.json"), encoding="utf-8"))
+    summary = json.load(open(os.path.join(work, "summary.json"), encoding="utf-8"))
+    assert summary["formulas"] == len(formulas) and summary["status"], summary
+    assert os.path.exists(os.path.join(out, "audit.md")), "one-command run must leave an audit"
     case = json.load(open(os.path.join(inp, "case.json"), encoding="utf-8"))
     for k in case["output_contract"]["required"]:
         assert k in res, "missing contract field %s" % k
