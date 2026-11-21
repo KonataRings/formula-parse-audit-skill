@@ -29,7 +29,14 @@ description: 解析科研材料中的公式（MathML、出版商 XML、PDF 片�
 ## 处理流程
 
 1. **识别材料边界。** 列出 `/input/artifacts` 实际存在的文件，逐个判断类型：含 `mfrac`/`msub` 的 XML 是公式表示，纯 `<p>` 的 XML 或 TXT 是正文，PDF 需要文本层。记录哪些材料存在、哪些缺失，缺失项直接进入结果的状态字段。
-2. **抽取公式并保结构。** 用 `scripts/formula_extract.py` 把 MathML 子集转成 LaTeX，保留分式、上下标、括号层级和来源 `id`。输出 `work/formulas.jsonl`，每行为 `{id, latex, kind, depth, source}`。转换后逐条对照原节点复核一次：分式是否仍是分式、上下标是否落到正确基底、希腊字母与单位是否错位。
+2. **抽取公式并保结构。** 用 `scripts/formula_extract.py` 把 MathML 子集转成 LaTeX，保留分式、上下标、括号层级和来源 `id`。输出 `work/formulas.jsonl`，每行为 `{id, latex, kind, depth, method, container, label, truncated, source}`。转换后逐条对照原节点复核一次：分式是否仍是分式、上下标是否落到正确基底、希腊字母与单位是否错位。
+
+   已知的四个易错点，脚本按下列顺序处理：
+
+   - **原文 LaTeX 优先**：`<annotation encoding="application/x-tex">` 或 `math/@alttext` 存在时直接采用，`method` 记为 `source_annotation`，否则记 `reconstructed`。
+   - **不可见算符**：U+2061（函数作用）与 U+2062（隐式乘）必须丢弃，不能写进 LaTeX，否则 `sin(x)` 会变成非法命令。
+   - **命令与字母相邻**：`\pi` 紧接 `m` 时插入空格，避免被读成 `\pim`。
+   - **公式编号**：JATS 把编号放在 `disp-formula` 的 `<label>` 里，脚本沿祖先查找并写入 `label` 字段。
 3. **建立变量表。** 用 `scripts/symbol_table.py` 从 LaTeX 提取符号，合并正文中的定义句，输出 `work/symbols.csv`。每一行必须能回答：符号是什么、含义、单位、取值范围、首次定义出现在哪个 `id` 或页码。原文没有给出的字段写 `not_reported`，不按常识补写。
 4. **拆解推导。** 只对材料中真实出现的推导写步骤；每步记录所用前序步骤的 `id`、假设、近似和边界条件。跨公式引用要指名 `id`。材料只给结论而未给推导时，写 `derivation_not_provided`，不要自行生成"看起来合理"的中间步骤。
 5. **数值核验。** 用 `scripts/numeric_check.py` 对可计算公式做代算：解析 LaTeX、代入材料给出的数值、输出中间值与最终值。无法解析或缺少数值时，报告失败原因与本应满足的条件，不用 0 占位。
@@ -107,6 +114,7 @@ C02 这类"保留真实缺失分支"的案例，正确做法是报告缺什么�
 - `scripts/assemble_result.py`：按 `output_contract` 装配 `result.json`。
 - `scripts/audit.py`：生成 `audit.md` 自审清单。
 - `scripts/dimension_check.py`：量纲引擎，符号单位带入同一表达式求值，核对结果量纲。
+- `scripts/latex_compare.py`：两个 LaTeX 的结构规范化比较与数值等价抽样，用于判断"写法不同、含义相同"。
 - `install.py`：把 Skill 幂等复制到 `/app/submission`，兼容两种目录约定。
 - `benchmark/`：自建 10 条公式基准，期望值来自与 LaTeX 转换独立的表达式；`run_benchmark.py` 输出通过率与逐条表达式。它检验的是转换保真度，不是官方分数。
 - `templates/`：变量表与报告模板。
