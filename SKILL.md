@@ -33,7 +33,7 @@ description: 解析科研材料中的公式（MathML、出版商 XML、PDF 片�
 
    已知的四个易错点，脚本按下列顺序处理：
 
-   - **原文 LaTeX 优先**：`<annotation encoding="application/x-tex">` 或 `math/@alttext` 存在时直接采用，`method` 记为 `source_annotation`，否则记 `reconstructed`。
+   - **原文 LaTeX 优先**：JATS 的 `<tex-math>`（常包着一整份排版用 LaTeX 文档，需剥掉导言区）、MathML 的 `<annotation encoding="application/x-tex">`、`math/@alttext` 三条路径依次尝试，命中即采用，`method` 记为 `source_texmath`、`source_annotation` 或 `source_alttext`；原文 LaTeX 原样保留，不重排。都不存在时才重建，记 `reconstructed`。
    - **不可见算符**：U+2061（函数作用）与 U+2062（隐式乘）必须丢弃，不能写进 LaTeX，否则 `sin(x)` 会变成非法命令。
    - **命令与字母相邻**：`\pi` 紧接 `m` 时插入空格，避免被读成 `\pim`。
    - **公式编号**：JATS 把编号放在 `disp-formula` 的 `<label>` 里，脚本沿祖先查找并写入 `label` 字段。
@@ -116,6 +116,7 @@ C02 这类"保留真实缺失分支"的案例，正确做法是报告缺什么�
 - `scripts/dimension_check.py`：量纲引擎，符号单位带入同一表达式求值，核对结果量纲。
 - `scripts/latex_compare.py`：两个 LaTeX 的结构规范化比较与数值等价抽样，用于判断"写法不同、含义相同"。
 - `scripts/link_refs.py`：把正文中的编号引用连到带 `<label>` 的公式，产出依赖边。
+- `scripts/validate_corpus.py`：对一批出版商 XML 出覆盖报告（取得方式、id 与编号留存、空结果与截断数），用于先摸清某家出版社的公式表示方式。
 - `install.py`：把 Skill 幂等复制到 `/app/submission`，兼容两种目录约定。
 - `benchmark/`：自建 10 条公式基准，期望值来自与 LaTeX 转换独立的表达式；`run_benchmark.py` 输出通过率与逐条表达式。它检验的是转换保真度，不是官方分数。
 - `templates/`：变量表与报告模板。
