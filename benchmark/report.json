@@ -122,5 +122,81 @@
    "expr": "((h)/(sqrt(2*pi*m*k_B*T)))",
    "note": "square root in the denominator; constants under the root"
   }
+ ],
+ "mathml_passed": 8,
+ "mathml_total": 8,
+ "mathml_rows": [
+  {
+   "id": "mass-energy",
+   "ok": true,
+   "got": "E=m{c}^{2}",
+   "want": "E=m{c}^{2}",
+   "method": "reconstructed",
+   "truncated": false,
+   "note": "superscript on a single letter"
+  },
+  {
+   "id": "invisible-times",
+   "ok": true,
+   "got": "2\\pi m{k}^{2}",
+   "want": "2\\pi m{k}^{2}",
+   "method": "reconstructed",
+   "truncated": false,
+   "note": "U+2062 must vanish, not become an operator"
+  },
+  {
+   "id": "function-application",
+   "ok": true,
+   "got": "\\mathrm{sin}(x)",
+   "want": "\\mathrm{sin}(x)",
+   "method": "reconstructed",
+   "truncated": false,
+   "note": "U+2061 is function application; sin(x) is not sin*(x)"
+  },
+  {
+   "id": "root-of-fraction",
+   "ok": true,
+   "got": "\\omega=\\sqrt{\\frac{k}{m}}",
+   "want": "\\omega=\\sqrt{\\frac{k}{m}}",
+   "method": "reconstructed",
+   "truncated": false,
+   "note": "square root wrapping a fraction"
+  },
+  {
+   "id": "subscript-superscript",
+   "ok": true,
+   "got": "{x}_{i}^{2}+{x}_{j}^{2}",
+   "want": "{x}_{i}^{2}+{x}_{j}^{2}",
+   "method": "reconstructed",
+   "truncated": false,
+   "note": "msubsup keeps both scripts on the same base"
+  },
+  {
+   "id": "piecewise",
+   "ok": true,
+   "got": "f(x)=\\begin{cases}x & x>0 \\\\ -x & x\\le0\\end{cases}",
+   "want": "f(x)=\\begin{cases}x & x>0 \\\\ -x & x\\le 0\\end{cases}",
+   "method": "reconstructed",
+   "truncated": false,
+   "note": "braced table becomes cases; rows are two columns"
+  },
+  {
+   "id": "uppercase-greek",
+   "ok": true,
+   "got": "\\Theta=\\frac{h{\\nu}_{D}}{{k}_{B}}",
+   "want": "\\Theta=\\frac{h{\\nu}_{D}}{{k}_{B}}",
+   "method": "reconstructed",
+   "truncated": false,
+   "note": "uppercase Greek and two subscripted factors"
+  },
+  {
+   "id": "alttext-only",
+   "ok": true,
+   "got": "a+b",
+   "want": "a+b",
+   "method": "reconstructed",
+   "truncated": false,
+   "note": "when the publisher gives alttext LaTeX, prefer it over reconstruction"
+  }
  ]
 }
